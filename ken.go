@@ -67,6 +67,11 @@ type Name struct {
 	Ruby string
 }
 
+// 名前が同じものかどうかを返す。
+func (name Name) Equal(name1 Name) bool {
+	return name.Text == name1.Text && name.Ruby == name1.Ruby
+}
+
 // 更新の表示。
 type Status int
 
@@ -88,49 +93,66 @@ const (
 	ReasonNotModified Reason = 0
 )
 
+var parserChain = []Parser{}
+
 // パースした結果を流すチャネルを返す。
 // ecからエラーを受信した後はどちらのチャネルからもデータは届かない。
+// 処理が終わればどちらのチャネルもクローズされる。
 func Parse(c chan<- *Entry, ec chan<- error, r io.Reader) {
+	c1 := make(chan interface{})
+	go readFromCSVLoop(c1, r)
+	for _, parser := range parserChain {
+		c2 := make(chan interface{})
+		parser.Parse(c1, c2)
+		c1 = c2
+	}
+	for v := range c1 {
+		if err, ok := v.(error); ok {
+			ec <- err
+			return
+		}
+		c <- v.(*Entry)
+	}
+}
+
+// rからCSVデータを読み、cにエントリを送信する。
+// エラーが発生した場合はecへエラーを送信する。
+func readFromCSVLoop(c chan<- interface{}, r io.Reader) {
 	fin := csv.NewReader(r)
 	record, err := fin.Read()
 	if err != nil {
-		ec <- err
+		c <- err
 		return
 	}
 
-	_, err = strconv.Atoi(record[0])
-	if err != nil {
-		ec <- err
-		return
-	}
 	isPartialTown, err := strconv.ParseBool(record[9])
 	if err != nil {
-		ec <- err
+		c <- err
 		return
 	}
 	isLargeTown, err := strconv.ParseBool(record[10])
 	if err != nil {
-		ec <- err
+		c <- err
 		return
 	}
 	isBlockedScheme, err := strconv.ParseBool(record[11])
 	if err != nil {
-		ec <- err
+		c <- err
 		return
 	}
 	isOverlappedZip, err := strconv.ParseBool(record[12])
 	if err != nil {
-		ec <- err
+		c <- err
 		return
 	}
 	status, err := parseStatus(record[13])
 	if err != nil {
-		ec <- err
+		c <- err
 		return
 	}
 	reason, err := parseReason(record[14])
 	if err != nil {
-		ec <- err
+		c <- err
 		return
 	}
 	c <- &Entry{
