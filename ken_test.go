@@ -1,59 +1,56 @@
 package postal
 
 import (
+	"bytes"
+	"strings"
 	"testing"
 )
 
-// Reasonの全メソッド結果がすべて正しいことを確認。
-func TestReason(t *testing.T) {
-	tab := []struct {
-		r Reason
-		d bool
-	}{
-		{Reason(0), false},
-		{Reason(1), false},
-		{Reason(2), false},
-		{Reason(3), false},
-		{Reason(4), false},
-		{Reason(5), false},
-		{Reason(6), true},
+func TestParseOneLine(t *testing.T) {
+	actuals := []string{
+		`01101,"060  ","0600000","ﾎｯｶｲﾄﾞｳ","ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ","ｲｶﾆｹｲｻｲｶﾞﾅｲﾊﾞｱｲ","北海道","札幌市中央区","以下に掲>載がない場合",0,0,0,0,0,0`,
 	}
-	for _, item := range tab {
-		if d := item.r.IsDeleted(); d != item.d {
-			t.Errorf("IsDeleted() = %v, but expected %v\n", d, item.d)
-		}
+	expects := []*Entry{
+		&Entry{
+			Code:            "01101",
+			OldZip:          "060  ",
+			Zip:             "0600000",
+			Pref:            Name{"北海道", "ﾎｯｶｲﾄﾞｳ"},
+			Region:          Name{"幌市中央区", "ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ"},
+			Town:            Name{"", ""},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
 	}
+	parseTest(t, actuals, expects, "\n")
 }
-
-// ファイルが空の場合は住所リストも空になる。
-func TestEmpty(t *testing.T) {
-	source := [][]string{}
-	expect := []*Address{}
-	testParser(t, source, expect)
-}
-
-// テスト用の便利メソッド。
-// 入力データをパースした結果と期待値を比較してエラー報告する。
-func testParser(t *testing.T, records [][]string, a []*Address) {
-	result := make([]*Address, 0, len(a))
-	c := Parse(NewArrayFile(records))
-	for addr := range c {
-		result = append(result, addr)
-	}
-	max := len(result)
-	if len(result) != len(a) {
-		t.Errorf("len(result) = %d; expect %d\n", len(result), len(a))
-		if len(result) < len(a) {
-			max = len(a)
+func parseTest(t *testing.T, actuals []string, expects []*Entry, newline string) {
+	c := make(chan *Entry)
+	ec := make(chan error)
+	s := strings.Join(actuals, newline)
+	fin := bytes.NewBufferString(s)
+	go Parse(c, ec, fin)
+	for _, expect := range expects {
+		entry := <-c
+		if entry == nil {
+			t.Errorf("Parse() = nil; Expect not nil")
+			return
 		}
-	}
-	for i := 0; i < max; i++ {
-		if i >= len(result) {
-			t.Errorf("len(result) too short: result[%d] = %v\n", i, *result[i])
-		} else if i >= len(a) {
-			t.Errorf("len(result) too long: result[%d] = %v\n", i, *result[i])
-		} else if !result[i].Equal(a[i]) {
-			t.Errorf("result[%d] = %v expect %v\n", result[i], a[i])
+		if entry.Code != expect.Code {
+			t.Errorf("Parse(): Code = %q; Expect %q", entry.Code, expect.Code)
+		}
+		if entry.OldZip != expect.OldZip {
+			t.Errorf("Parse(): OldZip = %q; Expect %q", entry.OldZip, expect.OldZip)
+		}
+		if entry.Zip != expect.Zip {
+			t.Errorf("Parse(): Zip = %q; Expect %q", entry.Zip, expect.Zip)
+		}
+		if entry.Pref != expect.Pref {
+			t.Errorf("Parse(): Pref = %q; Expect %q", entry.Pref, expect.Pref)
 		}
 	}
 }
