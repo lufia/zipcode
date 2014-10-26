@@ -114,6 +114,10 @@ func (delim tokenDelim) Expand(s string) ([]string, error) {
 			})
 			a := make([]string, len(tokens))
 			for j, token := range tokens {
+				// "その他"だけは特別扱い
+				if token == "その他" || token == "ｿﾉﾀ" {
+					token = ""
+				}
 				a[j] = string(t[0:i]) + token + string(t[i+len(expr)+2:])
 			}
 			return a, nil
