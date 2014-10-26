@@ -11,6 +11,7 @@
 // 大字=divided
 // 小字=sub-divided
 // 建物名=building
+// 参考: http://en.wikipedia.org/wiki/Japanese_addressing_system
 package postal
 
 import (
