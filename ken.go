@@ -14,8 +14,6 @@
 package postal
 
 import (
-	"encoding/csv"
-	"io"
 	"strconv"
 )
 
@@ -72,6 +70,15 @@ func (name Name) Equal(name1 Name) bool {
 	return name.Text == name1.Text && name.Ruby == name1.Ruby
 }
 
+// Combineはname1の内容をnameの後に追加する。
+// 追加された状態のNameを返す。
+func (name Name) Combine(name1 Name) Name {
+	return Name{
+		Text: name.Text + name1.Text,
+		Ruby: name.Ruby + name1.Ruby,
+	}
+}
+
 // 更新の表示。
 type Status int
 
@@ -92,84 +99,6 @@ type Reason int
 const (
 	ReasonNotModified Reason = 0
 )
-
-var parserChain = []Parser{}
-
-// パースした結果を流すチャネルを返す。
-// ecからエラーを受信した後はどちらのチャネルからもデータは届かない。
-// 処理が終わればどちらのチャネルもクローズされる。
-func Parse(c chan<- *Entry, ec chan<- error, r io.Reader) {
-	c1 := make(chan interface{})
-	go readFromCSVLoop(c1, r)
-	for _, parser := range parserChain {
-		c2 := make(chan interface{})
-		parser.Parse(c1, c2)
-		c1 = c2
-	}
-	for v := range c1 {
-		if err, ok := v.(error); ok {
-			ec <- err
-			return
-		}
-		c <- v.(*Entry)
-	}
-}
-
-// rからCSVデータを読み、cにエントリを送信する。
-// エラーが発生した場合はecへエラーを送信する。
-func readFromCSVLoop(c chan<- interface{}, r io.Reader) {
-	fin := csv.NewReader(r)
-	record, err := fin.Read()
-	if err != nil {
-		c <- err
-		return
-	}
-
-	isPartialTown, err := strconv.ParseBool(record[9])
-	if err != nil {
-		c <- err
-		return
-	}
-	isLargeTown, err := strconv.ParseBool(record[10])
-	if err != nil {
-		c <- err
-		return
-	}
-	isBlockedScheme, err := strconv.ParseBool(record[11])
-	if err != nil {
-		c <- err
-		return
-	}
-	isOverlappedZip, err := strconv.ParseBool(record[12])
-	if err != nil {
-		c <- err
-		return
-	}
-	status, err := parseStatus(record[13])
-	if err != nil {
-		c <- err
-		return
-	}
-	reason, err := parseReason(record[14])
-	if err != nil {
-		c <- err
-		return
-	}
-	c <- &Entry{
-		Code:            record[0],
-		OldZip:          record[1],
-		Zip:             record[2],
-		Pref:            Name{record[6], record[3]},
-		Region:          Name{record[7], record[4]},
-		Town:            Name{record[8], record[5]},
-		IsPartialTown:   isPartialTown,
-		IsLargeTown:     isLargeTown,
-		IsBlockedScheme: isBlockedScheme,
-		IsOverlappedZip: isOverlappedZip,
-		Status:          status,
-		Reason:          reason,
-	}
-}
 
 func parseStatus(s string) (Status, error) {
 	switch s {
