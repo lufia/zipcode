@@ -123,6 +123,29 @@ func TestParseSplitted(t *testing.T) {
 	parseTest(t, actuals, expects, "\n")
 }
 
+func TestParseOthers(t *testing.T) {
+	actuals := []string{
+		`02206,"03403","0340301","ｱｵﾓﾘｹﾝ","ﾄﾜﾀﾞｼ","ｵｸｾ(ｿﾉﾀ)","青森県","十和田市","奥瀬（その他）",1,1,0,0,0,0`,
+	}
+	expects := []*Entry{
+		&Entry{
+			Code:            "02206",
+			OldZip:          "03403",
+			Zip:             "0340301",
+			Pref:            Name{"青森県", "ｱｵﾓﾘｹﾝ"},
+			Region:          Name{"十和田市", "ﾄﾜﾀﾞｼ"},
+			Town:            Name{"奥瀬", "ｵｸｾ"},
+			IsPartialTown:   true,
+			IsLargeTown:     true,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+	}
+	parseTest(t, actuals, expects, "\n")
+}
+
 func parseTest(t *testing.T, actuals []string, expects []*Entry, newline string) {
 	c := make(chan *Entry)
 	ec := make(chan error)
