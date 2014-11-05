@@ -1,9 +1,9 @@
 package postal
 
 import (
-	"fmt"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -70,7 +70,7 @@ func (f entryExpanderFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 			return
 		}
 		entry := v.(*Entry)
-		a1, err := tokenDelim{'（', '）', '、'}.Expand(entry.Town.Text)
+		a1, err := tokenDelim{'(', ')', '、'}.Expand(entry.Town.Text)
 		if err != nil {
 			c1 <- err
 			return
@@ -94,8 +94,8 @@ func (f entryExpanderFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 
 type tokenDelim struct {
 	TokenBegin rune
-	TokenEnd rune
-	Delim rune
+	TokenEnd   rune
+	Delim      rune
 }
 
 // （）の中の文字列を展開して配列で返す。
@@ -150,9 +150,13 @@ var parserChain = []Parser{
 		}
 		return entry
 	}),
+	entryHandlerFunc(func(entry *Entry) *Entry {
+		entry.Town.Text = NormalizeText(entry.Town.Text)
+		return entry
+	}),
 	entryCollectorFunc(func(entry *Entry) bool {
-		open := strings.Count(entry.Town.Text, "（")
-		close := strings.Count(entry.Town.Text, "）")
+		open := strings.Count(entry.Town.Text, "(")
+		close := strings.Count(entry.Town.Text, ")")
 		return open == close
 	}),
 	entryExpanderFunc(func(entry *Entry) []*Entry {
