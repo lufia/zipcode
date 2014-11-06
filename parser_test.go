@@ -123,6 +123,58 @@ func TestParseSplitted(t *testing.T) {
 	parseTest(t, actuals, expects, "\n")
 }
 
+func TestPrase(t *testing.T) {
+	actuals := []string{
+		`01101,"064  ","0640930","ﾎｯｶｲﾄﾞｳ","ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ","ﾐﾅﾐ30ｼﾞｮｳﾆｼ(9-11ﾁｮｳﾒ)","北海道","札幌市中央区","南三十条西（９〜１１丁目）",0,0,1,0,0,0`,
+	}
+	expects := []*Entry{
+		&Entry{
+			Code:            "01101",
+			OldZip:          "064  ",
+			Zip:             "0640930",
+			Pref:            Name{"北海道", "ﾎｯｶｲﾄﾞｳ"},
+			Region:          Name{"札幌市中央区", "ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ"},
+			Town:            Name{"南三十条西9丁目", "ﾐﾅﾐ30ｼﾞｮｳﾆｼ9ﾁｮｳﾒ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: true,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "01101",
+			OldZip:          "064  ",
+			Zip:             "0640930",
+			Pref:            Name{"北海道", "ﾎｯｶｲﾄﾞｳ"},
+			Region:          Name{"札幌市中央区", "ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ"},
+			Town:            Name{"南三十条西10丁目", "ﾐﾅﾐ30ｼﾞｮｳﾆｼ10ﾁｮｳﾒ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: true,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "01101",
+			OldZip:          "064  ",
+			Zip:             "0640930",
+			Pref:            Name{"北海道", "ﾎｯｶｲﾄﾞｳ"},
+			Region:          Name{"札幌市中央区", "ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ"},
+			Town:            Name{"南三十条西11丁目", "ﾐﾅﾐ30ｼﾞｮｳﾆｼ11ﾁｮｳﾒ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: true,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+	}
+	parseTest(t, actuals, expects, "\n")
+
+}
+
 func TestParseOthers(t *testing.T) {
 	actuals := []string{
 		`02206,"03403","0340301","ｱｵﾓﾘｹﾝ","ﾄﾜﾀﾞｼ","ｵｸｾ(ｿﾉﾀ)","青森県","十和田市","奥瀬（その他）",1,1,0,0,0,0`,
@@ -158,8 +210,8 @@ func parseTest(t *testing.T, actuals []string, expects []*Entry, newline string)
 			t.Errorf("Parse() = %v; Expect not error", err)
 		case entry := <-c:
 			if entry == nil {
-				t.Errorf("Parse() = nil; Expect not nil")
-				return
+				t.Errorf("Parse() = nil; Expect %v", expect)
+				continue
 			}
 			if entry.Code != expect.Code {
 				t.Errorf("Parse(): Code = %q; Expect %q", entry.Code, expect.Code)
