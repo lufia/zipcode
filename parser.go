@@ -100,6 +100,7 @@ type tokenDelim struct {
 
 // （）の中の文字列を展開して配列で返す。
 // "ほげ、ふが" => ["ほげ", "ふが"]
+// "1〜3" => ["1", "2", "3"]
 func (delim tokenDelim) Expand(s string) ([]string, error) {
 	t := []rune(s)
 	for i := 0; i < len(t); i++ {
@@ -140,7 +141,7 @@ func (delim tokenDelim) Expr(s []rune) ([]rune, error) {
 	return nil, fmt.Errorf("missing %q", delim.TokenEnd)
 }
 
-var parserChain = []Parser{
+var parserFilters = []Parser{
 	entryHandlerFunc(func(entry *Entry) *Entry {
 		if entry.Town.Text == "以下に掲載がない場合" {
 			entry.Town.Text = ""
@@ -170,7 +171,7 @@ func Parse(c chan<- *Entry, ec chan<- error, r io.Reader) {
 	defer close(c)
 	c1 := make(chan interface{})
 	go readFromCSVLoop(r, c1)
-	for _, parser := range parserChain {
+	for _, parser := range parserFilters {
 		c2 := make(chan interface{})
 		go parser.Parse(c1, c2)
 		c1 = c2
