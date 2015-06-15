@@ -12,7 +12,7 @@
 // 小字=sub-divided
 // 建物名=building
 // 参考: http://en.wikipedia.org/wiki/Japanese_addressing_system
-package postal
+package postal // import "lufia.org/pkg/ken_all.csv"
 
 import (
 	"strconv"
