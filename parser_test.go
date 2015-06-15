@@ -9,6 +9,7 @@ import (
 func TestParse(t *testing.T) {
 	actuals := []string{
 		`01101,"060  ","0600000","ﾎｯｶｲﾄﾞｳ","ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ","ｲｶﾆｹｲｻｲｶﾞﾅｲﾊﾞｱｲ","北海道","札幌市中央区","以下に掲載がない場合",0,0,0,0,0,0`,
+		`13104,"160  ","1600023","ﾄｳｷｮｳﾄ","ｼﾝｼﾞｭｸｸ","ﾆｼｼﾝｼﾞｭｸ(ﾂｷﾞﾉﾋﾞﾙｦﾉｿﾞｸ)","東京都","新宿区","西新宿（次のビルを除く）",0,0,1,0,0,0`,
 	}
 	expects := []*Entry{
 		&Entry{
@@ -18,6 +19,15 @@ func TestParse(t *testing.T) {
 			Pref:   Name{"北海道", "ﾎｯｶｲﾄﾞｳ"},
 			Region: Name{"札幌市中央区", "ｻｯﾎﾟﾛｼﾁｭｳｵｳｸ"},
 			Notice: "以下に掲載がない場合",
+		},
+		&Entry{
+			Code:            "13104",
+			OldZip:          "160  ",
+			Zip:             "1600023",
+			Pref:            Name{"東京都", "ﾄｳｷｮｳﾄ"},
+			Region:          Name{"新宿区", "ｼﾝｼﾞｭｸｸ"},
+			Town:            Name{"西新宿", "ﾆｼｼﾝｼﾞｭｸ"},
+			IsBlockedScheme: true,
 		},
 	}
 	parseTest(t, actuals, expects, "\n")

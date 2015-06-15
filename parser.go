@@ -224,6 +224,17 @@ var parserFilters = []Parser{
 	}),
 	entryHandlerFunc(func(entry *Entry) *Entry {
 		const (
+			textSuffix = "（次のビルを除く）"
+			rubySuffix = "(ﾂｷﾞﾉﾋﾞﾙｦﾉｿﾞｸ)"
+		)
+		if strings.HasSuffix(entry.Town.Text, textSuffix) {
+			entry.Town.Text = entry.Town.Text[0 : len(entry.Town.Text)-len(textSuffix)]
+			entry.Town.Ruby = entry.Town.Ruby[0 : len(entry.Town.Ruby)-len(rubySuffix)]
+		}
+		return entry
+	}),
+	entryHandlerFunc(func(entry *Entry) *Entry {
+		const (
 			textSuffix = "の次に番地がくる場合"
 			rubySuffix = "ﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ"
 		)
