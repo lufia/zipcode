@@ -321,6 +321,8 @@ func TestParseOthers(t *testing.T) {
 func TestPraseNumberAfterCity(t *testing.T) {
 	actuals := []string{
 		`38204,"796  ","7960088","ｴﾋﾒｹﾝ","ﾔﾜﾀﾊﾏｼ","ﾔﾜﾀﾊﾏｼﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ","愛媛県","八幡浜市","八幡浜市の次に番地がくる場合",0,0,0,0,0,0`,
+		`39386,"78121","7812110","ｺｳﾁｹﾝ","ｱｶﾞﾜｸﾞﾝｲﾉﾁｮｳ","ｲﾉﾁｮｳﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ","高知県","吾川郡いの町","いの町の次に番地がくる場合",0,0,0,0,0,0`,
+		`42212,"85724","8572427","ﾅｶﾞｻｷｹﾝ","ｻｲｶｲｼ","ｵｵｼﾏﾁｮｳﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ","長崎県","西海市","大島町の次に番地がくる場合",0,0,0,0,0,0`,
 	}
 	expects := []*Entry{
 		&Entry{
@@ -337,6 +339,36 @@ func TestPraseNumberAfterCity(t *testing.T) {
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
 			Notice:          "八幡浜市の次に番地がくる場合",
+		},
+		&Entry{
+			Code:            "39386",
+			OldZip:          "78121",
+			Zip:             "7812110",
+			Pref:            Name{"高知県", "ｺｳﾁｹﾝ"},
+			Region:          Name{"吾川郡いの町", "ｱｶﾞﾜｸﾞﾝｲﾉﾁｮｳ"},
+			Town:            Name{"", ""},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+			Notice:          "いの町の次に番地がくる場合",
+		},
+		&Entry{
+			Code:            "42212",
+			OldZip:          "85724",
+			Zip:             "8572427",
+			Pref:            Name{"長崎県", "ﾅｶﾞｻｷｹﾝ"},
+			Region:          Name{"西海市", "ｻｲｶｲｼ"},
+			Town:            Name{"大島町", "ｵｵｼﾏﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+			Notice:          "大島町の次に番地がくる場合",
 		},
 	}
 	parseTest(t, actuals, expects, "\n")

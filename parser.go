@@ -223,12 +223,26 @@ var parserFilters = []Parser{
 		return entry
 	}),
 	entryHandlerFunc(func(entry *Entry) *Entry {
-		const withNumber = "の次に番地がくる場合"
-		if strings.HasSuffix(entry.Town.Text, withNumber) {
-			//town := entry.Town.Text[0:len(entry.Town.Text)-len(withNumber)]
+		const (
+			textSuffix = "の次に番地がくる場合"
+			rubySuffix = "ﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ"
+		)
+		if strings.HasSuffix(entry.Town.Text, textSuffix) {
 			entry.Notice = entry.Town.Text
-			entry.Town.Text = ""
-			entry.Town.Ruby = ""
+			town := Name{
+				Text: entry.Town.Text[0 : len(entry.Town.Text)-len(textSuffix)],
+				Ruby: entry.Town.Ruby[0 : len(entry.Town.Ruby)-len(rubySuffix)],
+			}
+			if strings.HasSuffix(entry.Region.Text, town.Text) {
+				entry.Town.Text = ""
+			} else {
+				entry.Town.Text = town.Text
+			}
+			if strings.HasSuffix(entry.Region.Ruby, town.Ruby) {
+				entry.Town.Ruby = ""
+			} else {
+				entry.Town.Ruby = town.Ruby
+			}
 		}
 		return entry
 	}),
