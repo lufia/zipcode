@@ -3,29 +3,33 @@ package postal
 
 // 郵便番号データのエントリを表す。
 type Address struct {
+	RegionID int
+
 	// 郵便番号(7桁)。
-	Code string
+	ZipCode string
 
 	// 都道府県。
 	Pref NameRuby
 
 	// 市区町村。
-	City NameRuby
+	Region NameRuby
 
 	// 町域。
-	SpecificPart NameRuby
+	Town NameRuby
 
 	// 町域が2つ以上の郵便番号を持つ。
-	A bool
+	IsMultiZip bool
 
 	// 小字ごとに番地が起番されている。
 	B bool
 
-	// 1つの郵便番号で2つ以上の町域をあらわす。
-	C bool
+	//has_chome
 
-	// 更新あり。
-	IsModified bool
+	// 1つの郵便番号で2つ以上の町域をあらわす。
+	IsMultiTown bool
+
+	// 更新状態。
+	Status State
 
 	// 更新理由。
 	Reason Reason
@@ -41,6 +45,19 @@ type NameRuby struct {
 	Name string
 	Ruby string
 }
+
+type State int
+
+const (
+	// 変更なし
+	NotModified State = iota
+
+	// 変更あり
+	Modified
+
+	// 廃止
+	Obsoleted
+)
 
 // 更新理由を表す。
 type Reason int
