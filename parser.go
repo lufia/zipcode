@@ -235,12 +235,9 @@ var parserFilters = []Parser{
 			}
 			if strings.HasSuffix(entry.Region.Text, town.Text) {
 				entry.Town.Text = ""
-			} else {
-				entry.Town.Text = town.Text
-			}
-			if strings.HasSuffix(entry.Region.Ruby, town.Ruby) {
 				entry.Town.Ruby = ""
 			} else {
+				entry.Town.Text = town.Text
 				entry.Town.Ruby = town.Ruby
 			}
 		}
@@ -252,20 +249,10 @@ var parserFilters = []Parser{
 			rubySuffix = "ｲﾁｴﾝ"
 		)
 		if strings.HasSuffix(entry.Town.Text, textSuffix) {
-			entry.Notice = entry.Town.Text
-			town := Name{
-				Text: entry.Town.Text[0 : len(entry.Town.Text)-len(textSuffix)],
-				Ruby: entry.Town.Ruby[0 : len(entry.Town.Ruby)-len(rubySuffix)],
-			}
-			if strings.HasSuffix(entry.Region.Text, town.Text) {
+			if entry.Town.Text != textSuffix {
+				entry.Notice = entry.Town.Text
 				entry.Town.Text = ""
-			} else {
-				entry.Town.Text = town.Text
-			}
-			if strings.HasSuffix(entry.Region.Ruby, town.Ruby) {
 				entry.Town.Ruby = ""
-			} else {
-				entry.Town.Ruby = town.Ruby
 			}
 		}
 		return entry

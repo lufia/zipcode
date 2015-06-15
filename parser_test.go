@@ -248,6 +248,7 @@ func TestPraseRegionWithNumber(t *testing.T) {
 func TestPraseCircle(t *testing.T) {
 	actuals := []string{
 		`13362,"10003","1000301","ﾄｳｷｮｳﾄ","ﾄｼﾏﾑﾗ","ﾄｼﾏﾑﾗｲﾁｴﾝ","東京都","利島村","利島村一円",0,0,0,0,0,0`,
+		`25443,"52203","5220317","ｼｶﾞｹﾝ","ｲﾇｶﾐｸﾞﾝﾀｶﾞﾁｮｳ","ｲﾁｴﾝ","滋賀県","犬上郡多賀町","一円",0,0,0,0,0,0`,
 	}
 	expects := []*Entry{
 		&Entry{
@@ -257,6 +258,14 @@ func TestPraseCircle(t *testing.T) {
 			Pref:   Name{"東京都", "ﾄｳｷｮｳﾄ"},
 			Region: Name{"利島村", "ﾄｼﾏﾑﾗ"},
 			Notice: "利島村一円",
+		},
+		&Entry{
+			Code:   "25443",
+			OldZip: "52203",
+			Zip:    "5220317",
+			Pref:   Name{"滋賀県", "ｼｶﾞｹﾝ"},
+			Region: Name{"犬上郡多賀町", "ｲﾇｶﾐｸﾞﾝﾀｶﾞﾁｮｳ"},
+			Town:   Name{"一円", "ｲﾁｴﾝ"},
 		},
 	}
 	parseTest(t, actuals, expects, "\n")
