@@ -278,7 +278,7 @@ var parserFilters = []entryParser{
 		return entry
 	}),
 	entryHandlerFunc(func(entry *Entry) *Entry {
-		entry.Town.Text = NormalizeText(entry.Town.Text)
+		entry.Town.Text = normalizeText(entry.Town.Text)
 		return entry
 	}),
 	entryCollectorFunc(func(entry *Entry) bool {

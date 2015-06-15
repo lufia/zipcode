@@ -1,6 +1,6 @@
 package zipcode
 
-func NormalizeText(s string) string {
+func normalizeText(s string) string {
 	tab := map[rune]rune{
 		'（': '(',
 		'）': ')',
