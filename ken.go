@@ -12,7 +12,7 @@
 // 小字=sub-divided
 // 建物名=building
 // 参考: http://en.wikipedia.org/wiki/Japanese_addressing_system
-package zipcode // import "lufia.org/pkg/zipcode"
+package zipcode // import "lufia.org/pkg/japanese/zipcode"
 
 import (
 	"strconv"
