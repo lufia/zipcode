@@ -1,80 +1,130 @@
 // 郵便番号パーサ。
+// 県=pref
+// 市=city
+// 区=wards
+// 郡=district
+// 町=town
+// 村=village
+// 丁目=block(city districts?)
+// 番地=number
+// 号=extension
+// 大字=divided
+// 小字=sub-divided
+// 建物名=building
+// 参考: http://en.wikipedia.org/wiki/Japanese_addressing_system
 package postal
 
+import (
+	"strconv"
+)
+
 // 郵便番号データのエントリを表す。
-type Address struct {
-	RegionID int
+type Entry struct {
+	// 全国地方公共団体コード。
+	Code string
+
+	// 旧郵便番号(5桁)。
+	OldZip string
 
 	// 郵便番号(7桁)。
-	ZipCode string
+	Zip string
 
-	// 都道府県。
-	Pref NameRuby
+	// 都道府県名。
+	Pref Name
 
-	// 市区町村。
-	Region NameRuby
+	// 市区町村名。
+	Region Name
 
-	// 町域。
-	Town NameRuby
+	// 町域名。
+	Town Name
 
 	// 町域が2つ以上の郵便番号を持つ。
-	IsMultiZip bool
+	IsPartialTown bool
 
 	// 小字ごとに番地が起番されている。
-	B bool
+	IsLargeTown bool
+
+	// 丁目を有する町域。
+	IsBlockedScheme bool
 
 	//has_chome
 
 	// 1つの郵便番号で2つ以上の町域をあらわす。
-	IsMultiTown bool
+	IsOverlappedZip bool
 
-	// 更新状態。
-	Status State
+	// 更新の有無。
+	Status Status
 
 	// 更新理由。
 	Reason Reason
 }
 
-// aとbを比較して内容が同じならtrueを返す。
-func (a *Address) Equal(b *Address) bool {
-	return a == b
-}
-
 // ルビ付き名前を表す。
-type NameRuby struct {
-	Name string
+type Name struct {
+	// 漢字表記の名前。
+	Text string
+
+	// カナ表記の名前。
 	Ruby string
 }
 
-type State int
+// 名前が同じものかどうかを返す。
+func (name Name) Equal(name1 Name) bool {
+	return name.Text == name1.Text && name.Ruby == name1.Ruby
+}
+
+// Combineはname1の内容をnameの後に追加する。
+// 追加された状態のNameを返す。
+func (name Name) Combine(name1 Name) Name {
+	return Name{
+		Text: name.Text + name1.Text,
+		Ruby: name.Ruby + name1.Ruby,
+	}
+}
+
+// 更新の表示。
+type Status int
 
 const (
-	// 変更なし
-	NotModified State = iota
+	// 変更なし。
+	StatusNotModified Status = 0
 
-	// 変更あり
-	Modified
+	// 変更あり。
+	StatusModified = 1
 
-	// 廃止
-	Obsoleted
+	// 廃止。
+	StatusObsoleted = 2
 )
 
 // 更新理由を表す。
 type Reason int
 
-// 削除されている場合はtrueを返す。
-func (r Reason) IsDeleted() bool {
-	return int(r) == 6
+const (
+	ReasonNotModified Reason = 0
+)
+
+func parseStatus(s string) (Status, error) {
+	switch s {
+	case "0":
+		return StatusNotModified, nil
+	case "1":
+		return StatusModified, nil
+	case "2":
+		return StatusObsoleted, nil
+	default:
+		return 0, strconv.ErrSyntax
+	}
 }
 
-// 郵便番号表のレコードを読む。
-type RecordReader interface {
-	Read() (record []string, err error)
-}
-
-// パースした結果を流すチャネルを返す。
-func Parse(r RecordReader) chan *Address {
-	c := make(chan *Address)
-	close(c)
-	return c
+func parseReason(s string) (Reason, error) {
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, err
+	}
+	switch s {
+	case "0", "1", "2", "3", "4", "5", "6":
+		return Reason(n), nil
+	default:
+		return 0, strconv.ErrSyntax
+	}
 }
