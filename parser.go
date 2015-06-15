@@ -55,7 +55,7 @@ func (f entryCollectorFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 				return
 			}
 			entry1 := v.(*Entry)
-			entry.Town = entry.Town.Combine(entry1.Town)
+			entry.Town = entry.Town.combine(entry1.Town)
 		}
 		c1 <- entry
 	}
@@ -64,13 +64,13 @@ func (f entryCollectorFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 type entryExpanderFunc func(entry *Entry) []*Entry
 
 func (f entryExpanderFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
-	textRule := Rule{
+	textRule := cmplxRule{
 		TokenBegin: '(',
 		TokenEnd:   ')',
 		Delim:      '、',
 		Range:      '〜',
 	}
-	rubyRule := Rule{
+	rubyRule := cmplxRule{
 		TokenBegin: '(',
 		TokenEnd:   ')',
 		Delim:      '､',
@@ -114,8 +114,8 @@ func (f entryExpanderFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 	}
 }
 
-// RuleはKEN_ALL.CSVで複数の要素をまとめた書式をあらわす。
-type Rule struct {
+// cmplxRuleはKEN_ALL.CSVで複数の要素をまとめた書式をあらわす。
+type cmplxRule struct {
 	// 範囲書式の開始文字。たとえば"（"など。
 	TokenBegin rune
 	// 複数書式の終了文字。たとえば"）"など。
@@ -129,7 +129,7 @@ type Rule struct {
 // Evalは（）の中の文字列を展開して、一連の文字列を配列で返す。
 // "あああ（ほげ、ふが）" => ["あああほげ", "あああふが"]
 // "1〜3" => ["1", "2", "3"]
-func (rule Rule) Eval(s string) ([]string, error) {
+func (rule cmplxRule) Eval(s string) ([]string, error) {
 	t := []rune(s)
 	for i := 0; i < len(t); i++ {
 		switch t[i] {
@@ -159,7 +159,7 @@ func (rule Rule) Eval(s string) ([]string, error) {
 }
 
 // Expr returns string inside rule.TokenBegin and rule.TokenEnd.
-func (rule Rule) Expr(s []rune) ([]rune, error) {
+func (rule cmplxRule) Expr(s []rune) ([]rune, error) {
 	for i := 0; i < len(s); i++ {
 		switch s[i] {
 		case rule.TokenBegin:
@@ -172,7 +172,7 @@ func (rule Rule) Expr(s []rune) ([]rune, error) {
 }
 
 // Tokensはrule.Delimとrule.Rangeを評価して展開後の文字列配列を返す。
-func (rule Rule) Tokens(expr []rune) (tokens []string, err error) {
+func (rule cmplxRule) Tokens(expr []rune) (tokens []string, err error) {
 	stage1 := strings.FieldsFunc(string(expr), func(c rune) bool {
 		return c == rule.Delim
 	})
@@ -190,7 +190,7 @@ func (rule Rule) Tokens(expr []rune) (tokens []string, err error) {
 }
 
 // Expandはrule.Rangeを展開して複数の文字列を返す。
-func (rule Rule) Expand(token string) (tokens []string, err error) {
+func (rule cmplxRule) Expand(token string) (tokens []string, err error) {
 	re := regexp.MustCompile(`(\d+)` + string(rule.Range) + `(\d+)`)
 	m := re.FindStringSubmatchIndex(token)
 	if m == nil {

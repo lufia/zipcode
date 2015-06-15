@@ -1,4 +1,6 @@
-// 郵便番号パーサ。
+// KEN_ALL.CSVパーサ。
+package zipcode // import "lufia.org/pkg/japanese/zipcode"
+
 // 県=pref
 // 市=city
 // 区=wards
@@ -12,7 +14,6 @@
 // 小字=sub-divided
 // 建物名=building
 // 参考: http://en.wikipedia.org/wiki/Japanese_addressing_system
-package zipcode // import "lufia.org/pkg/japanese/zipcode"
 
 import (
 	"strconv"
@@ -76,9 +77,9 @@ func (name Name) Equal(name1 Name) bool {
 	return name.Text == name1.Text && name.Ruby == name1.Ruby
 }
 
-// Combineはname1の内容をnameの後に追加する。
+// combineはname1の内容をnameの後に追加する。
 // 追加された状態のNameを返す。
-func (name Name) Combine(name1 Name) Name {
+func (name Name) combine(name1 Name) Name {
 	var ruby string
 	if name.Ruby == name1.Ruby {
 		ruby = name.Ruby
