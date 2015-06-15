@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -63,6 +64,18 @@ func (f entryCollectorFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 type entryExpanderFunc func(entry *Entry) []*Entry
 
 func (f entryExpanderFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
+	textRule := Rule{
+		TokenBegin: '(',
+		TokenEnd:   ')',
+		Delim:      '、',
+		Range:      '〜',
+	}
+	rubyRule := Rule{
+		TokenBegin: '(',
+		TokenEnd:   ')',
+		Delim:      '､',
+		Range:      '-',
+	}
 	defer close(c1)
 	for v := range c {
 		if err, ok := v.(error); ok {
@@ -70,12 +83,12 @@ func (f entryExpanderFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 			return
 		}
 		entry := v.(*Entry)
-		a1, err := tokenDelim{'(', ')', '、'}.Expand(entry.Town.Text)
+		a1, err := textRule.Eval(entry.Town.Text)
 		if err != nil {
 			c1 <- err
 			return
 		}
-		a2, err := tokenDelim{'(', ')', '､'}.Expand(entry.Town.Ruby)
+		a2, err := rubyRule.Eval(entry.Town.Ruby)
 		if err != nil {
 			c1 <- err
 			return
@@ -92,27 +105,34 @@ func (f entryExpanderFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 	}
 }
 
-type tokenDelim struct {
+// RuleはKEN_ALL.CSVで複数の要素をまとめた書式をあらわす。
+type Rule struct {
+	// 範囲書式の開始文字。たとえば"（"など。
 	TokenBegin rune
-	TokenEnd   rune
-	Delim      rune
+	// 複数書式の終了文字。たとえば"）"など。
+	TokenEnd rune
+	// 複数書式で要素を分割する文字。たとえば"、"など。
+	Delim rune
+	// 複数書式で範囲をあらわす文字。たとえば"〜"など。
+	Range rune
 }
 
-// （）の中の文字列を展開して配列で返す。
-// "ほげ、ふが" => ["ほげ", "ふが"]
+// Evalは（）の中の文字列を展開して、一連の文字列を配列で返す。
+// "あああ（ほげ、ふが）" => ["あああほげ", "あああふが"]
 // "1〜3" => ["1", "2", "3"]
-func (delim tokenDelim) Expand(s string) ([]string, error) {
+func (rule Rule) Eval(s string) ([]string, error) {
 	t := []rune(s)
 	for i := 0; i < len(t); i++ {
 		switch t[i] {
-		case delim.TokenBegin:
-			expr, err := delim.Expr(t[i+1:])
+		case rule.TokenBegin:
+			expr, err := rule.Expr(t[i+1:])
 			if err != nil {
 				return nil, err
 			}
-			tokens := strings.FieldsFunc(string(expr), func(c rune) bool {
-				return c == delim.Delim
-			})
+			tokens, err := rule.Tokens(expr)
+			if err != nil {
+				return nil, err
+			}
 			a := make([]string, len(tokens))
 			for j, token := range tokens {
 				// "その他"だけは特別扱い
@@ -122,23 +142,66 @@ func (delim tokenDelim) Expand(s string) ([]string, error) {
 				a[j] = string(t[0:i]) + token + string(t[i+len(expr)+2:])
 			}
 			return a, nil
-		case delim.TokenEnd:
-			return nil, fmt.Errorf("missing %q", delim.TokenBegin)
+		case rule.TokenEnd:
+			return nil, fmt.Errorf("missing %q", rule.TokenBegin)
 		}
 	}
 	return []string{s}, nil
 }
 
-func (delim tokenDelim) Expr(s []rune) ([]rune, error) {
+// Expr returns string inside rule.TokenBegin and rule.TokenEnd.
+func (rule Rule) Expr(s []rune) ([]rune, error) {
 	for i := 0; i < len(s); i++ {
 		switch s[i] {
-		case delim.TokenBegin:
-			return nil, fmt.Errorf("missing %q", delim.TokenEnd)
-		case delim.TokenEnd:
+		case rule.TokenBegin:
+			return nil, fmt.Errorf("missing %q", rule.TokenEnd)
+		case rule.TokenEnd:
 			return s[0:i], nil
 		}
 	}
-	return nil, fmt.Errorf("missing %q", delim.TokenEnd)
+	return nil, fmt.Errorf("missing %q", rule.TokenEnd)
+}
+
+// Tokensはrule.Delimとrule.Rangeを評価して展開後の文字列配列を返す。
+func (rule Rule) Tokens(expr []rune) (tokens []string, err error) {
+	stage1 := strings.FieldsFunc(string(expr), func(c rune) bool {
+		return c == rule.Delim
+	})
+
+	for _, s := range stage1 {
+		stage2, err := rule.Expand(s)
+		if err != nil {
+			return nil, err
+		}
+		for _, token := range stage2 {
+			tokens = append(tokens, token)
+		}
+	}
+	return
+}
+
+// Expandはrule.Rangeを展開して複数の文字列を返す。
+func (rule Rule) Expand(token string) (tokens []string, err error) {
+	re := regexp.MustCompile(`(\d+)` + string(rule.Range) + `(\d+)`)
+	m := re.FindStringSubmatchIndex(token)
+	if m == nil {
+		tokens = append(tokens, token)
+		return
+	}
+	prefix := token[0:m[2]]
+	bp, err := strconv.Atoi(token[m[2]:m[3]])
+	if err != nil {
+		return
+	}
+	ep, err := strconv.Atoi(token[m[4]:m[5]])
+	if err != nil {
+		return
+	}
+	suffix := token[m[5]:]
+	for i := bp; i <= ep; i++ {
+		tokens = append(tokens, fmt.Sprintf("%s%d%s", prefix, i, suffix))
+	}
+	return
 }
 
 var parserFilters = []Parser{
