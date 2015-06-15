@@ -24,6 +24,7 @@ func TestParse(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "以下に掲載がない場合",
 		},
 	}
 	parseTest(t, actuals, expects, "\n")
@@ -51,6 +52,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "02206",
@@ -65,6 +67,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "02206",
@@ -79,6 +82,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "02206",
@@ -93,6 +97,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "02206",
@@ -107,6 +112,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "02206",
@@ -121,6 +127,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 
 		&Entry{
@@ -136,6 +143,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "26104",
@@ -150,6 +158,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "26104",
@@ -164,6 +173,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "26104",
@@ -178,6 +188,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "26104",
@@ -192,6 +203,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "26104",
@@ -206,6 +218,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "26104",
@@ -220,6 +233,7 @@ func TestParseSplitted(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 	}
 	parseTest(t, actuals, expects, "\n")
@@ -243,6 +257,7 @@ func TestPrase(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "01101",
@@ -257,6 +272,7 @@ func TestPrase(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 		&Entry{
 			Code:            "01101",
@@ -271,6 +287,7 @@ func TestPrase(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
 		},
 	}
 	parseTest(t, actuals, expects, "\n")
@@ -295,6 +312,31 @@ func TestParseOthers(t *testing.T) {
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
+			Notice:          "",
+		},
+	}
+	parseTest(t, actuals, expects, "\n")
+}
+
+func TestPraseNumberAfterCity(t *testing.T) {
+	actuals := []string{
+		`38204,"796  ","7960088","ｴﾋﾒｹﾝ","ﾔﾜﾀﾊﾏｼ","ﾔﾜﾀﾊﾏｼﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ","愛媛県","八幡浜市","八幡浜市の次に番地がくる場合",0,0,0,0,0,0`,
+	}
+	expects := []*Entry{
+		&Entry{
+			Code:            "38204",
+			OldZip:          "796  ",
+			Zip:             "7960088",
+			Pref:            Name{"愛媛県", "ｴﾋﾒｹﾝ"},
+			Region:          Name{"八幡浜市", "ﾔﾜﾀﾊﾏｼ"},
+			Town:            Name{"", ""},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+			Notice:          "八幡浜市の次に番地がくる場合",
 		},
 	}
 	parseTest(t, actuals, expects, "\n")
@@ -350,6 +392,9 @@ func parseTest(t *testing.T, actuals []string, expects []*Entry, newline string)
 			}
 			if entry.Reason != expect.Reason {
 				t.Errorf("Parse(): Reason = %q; Expect %q", entry.Reason, expect.Reason)
+			}
+			if entry.Notice != expect.Notice {
+				t.Errorf("Parse(): Notice = %q; Expect %q", entry.Notice, expect.Notice)
 			}
 		}
 	}

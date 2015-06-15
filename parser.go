@@ -216,9 +216,18 @@ func (rule Rule) Expand(token string) (tokens []string, err error) {
 var parserFilters = []Parser{
 	entryHandlerFunc(func(entry *Entry) *Entry {
 		if entry.Town.Text == "以下に掲載がない場合" {
+			entry.Notice = entry.Town.Text
 			entry.Town.Text = ""
+			entry.Town.Ruby = ""
 		}
-		if entry.Town.Ruby == "ｲｶﾆｹｲｻｲｶﾞﾅｲﾊﾞｱｲ" {
+		return entry
+	}),
+	entryHandlerFunc(func(entry *Entry) *Entry {
+		const withNumber = "の次に番地がくる場合"
+		if strings.HasSuffix(entry.Town.Text, withNumber) {
+			//town := entry.Town.Text[0:len(entry.Town.Text)-len(withNumber)]
+			entry.Notice = entry.Town.Text
+			entry.Town.Text = ""
 			entry.Town.Ruby = ""
 		}
 		return entry

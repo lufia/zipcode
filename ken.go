@@ -57,6 +57,9 @@ type Entry struct {
 
 	// 更新理由。
 	Reason Reason
+
+	// 備考。このフィールドはKEN_ALL.CSVには存在しない。
+	Notice string
 }
 
 // ルビ付き名前を表す。
