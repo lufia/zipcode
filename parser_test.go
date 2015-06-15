@@ -366,6 +366,9 @@ func parseTest(t *testing.T, actuals []string, expects []*Entry, newline string)
 			t.Errorf("Parse(): Notice = %q; Expect %q", entry.Notice, expect.Notice)
 		}
 	}
+	if entry, ok := <-c; ok {
+		t.Errorf("Parse() = %v; Expect end", *entry)
+	}
 	if parser.Error != nil {
 		t.Fatalf("Parse() = %v; Expect not error", parser.Error)
 	}
