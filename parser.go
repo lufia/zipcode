@@ -235,6 +235,15 @@ var parserFilters = []Parser{
 	}),
 	entryHandlerFunc(func(entry *Entry) *Entry {
 		const (
+			garbText = "（高層棟）"
+			garbRuby = "(ｺｳｿｳﾄｳ)"
+		)
+		entry.Town.Text = strings.Replace(entry.Town.Text, garbText, "", -1)
+		entry.Town.Ruby = strings.Replace(entry.Town.Ruby, garbRuby, "", -1)
+		return entry
+	}),
+	entryHandlerFunc(func(entry *Entry) *Entry {
+		const (
 			textSuffix = "の次に番地がくる場合"
 			rubySuffix = "ﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ"
 		)
