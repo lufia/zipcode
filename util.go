@@ -1,4 +1,4 @@
-package postal
+package zipcode
 
 func NormalizeText(s string) string {
 	tab := map[rune]rune{

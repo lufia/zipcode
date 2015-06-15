@@ -1,4 +1,4 @@
-package postal
+package zipcode
 
 import (
 	"encoding/csv"
