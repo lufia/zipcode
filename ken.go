@@ -76,9 +76,15 @@ func (name Name) Equal(name1 Name) bool {
 // Combineはname1の内容をnameの後に追加する。
 // 追加された状態のNameを返す。
 func (name Name) Combine(name1 Name) Name {
+	var ruby string
+	if name.Ruby == name1.Ruby {
+		ruby = name.Ruby
+	} else {
+		ruby = name.Ruby + name1.Ruby
+	}
 	return Name{
 		Text: name.Text + name1.Text,
-		Ruby: name.Ruby + name1.Ruby,
+		Ruby: ruby,
 	}
 }
 

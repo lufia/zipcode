@@ -33,6 +33,9 @@ func TestParseSplitted(t *testing.T) {
 	actuals := []string{
 		`02206,"01855","0185501","ｱｵﾓﾘｹﾝ","ﾄﾜﾀﾞｼ","ｵｸｾ(ｱｵﾌﾞﾅ､ｺﾀﾀﾐｲｼ､ﾄﾜﾀﾞ､ﾄﾜﾀﾞｺﾊﾝｳﾀﾙﾍﾞ､ﾄﾜﾀﾞｺﾊﾝﾈﾉｸﾁ､","青森県","十和田市","奥瀬（青撫、小畳石、十和田、十和田湖畔宇樽部、十和田湖畔子ノ口、",1,1,0,0,0,0`,
 		`02206,"01855","0185501","ｱｵﾓﾘｹﾝ","ﾄﾜﾀﾞｼ","ﾄﾜﾀﾞｺﾊﾝﾔｽﾐﾔ)","青森県","十和田市","十和田湖畔休屋）",1,1,0,0,0,0`,
+
+		`26104,"604  ","6040983","ｷｮｳﾄﾌ","ｷｮｳﾄｼﾅｶｷﾞｮｳｸ","ｻｻﾔﾁｮｳ","京都府","京都市中京区","笹屋町（麩屋町通竹屋町下る、麩屋町通夷川上る、竹屋町通麩屋町西入、竹屋",0,0,0,0,0,0`,
+		`26104,"604  ","6040983","ｷｮｳﾄﾌ","ｷｮｳﾄｼﾅｶｷﾞｮｳｸ","ｻｻﾔﾁｮｳ","京都府","京都市中京区","町通麩屋町東入、竹屋町通御幸町西入、夷川通麩屋町西入、夷川通麩屋町東入）",0,0,0,0,0,0`,
 	}
 	expects := []*Entry{
 		&Entry{
@@ -114,6 +117,105 @@ func TestParseSplitted(t *testing.T) {
 			Town:            Name{"奥瀬十和田湖畔休屋", "ｵｸｾﾄﾜﾀﾞｺﾊﾝﾔｽﾐﾔ"},
 			IsPartialTown:   true,
 			IsLargeTown:     true,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+
+		&Entry{
+			Code:            "26104",
+			OldZip:          "604  ",
+			Zip:             "6040983",
+			Pref:            Name{"京都府", "ｷｮｳﾄﾌ"},
+			Region:          Name{"京都市中京区", "ｷｮｳﾄｼﾅｶｷﾞｮｳｸ"},
+			Town:            Name{"笹屋町麩屋町通竹屋町下る", "ｻｻﾔﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "26104",
+			OldZip:          "604  ",
+			Zip:             "6040983",
+			Pref:            Name{"京都府", "ｷｮｳﾄﾌ"},
+			Region:          Name{"京都市中京区", "ｷｮｳﾄｼﾅｶｷﾞｮｳｸ"},
+			Town:            Name{"笹屋町麩屋町通夷川上る", "ｻｻﾔﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "26104",
+			OldZip:          "604  ",
+			Zip:             "6040983",
+			Pref:            Name{"京都府", "ｷｮｳﾄﾌ"},
+			Region:          Name{"京都市中京区", "ｷｮｳﾄｼﾅｶｷﾞｮｳｸ"},
+			Town:            Name{"笹屋町竹屋町通麩屋町西入", "ｻｻﾔﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "26104",
+			OldZip:          "604  ",
+			Zip:             "6040983",
+			Pref:            Name{"京都府", "ｷｮｳﾄﾌ"},
+			Region:          Name{"京都市中京区", "ｷｮｳﾄｼﾅｶｷﾞｮｳｸ"},
+			Town:            Name{"笹屋町竹屋町通麩屋町東入", "ｻｻﾔﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "26104",
+			OldZip:          "604  ",
+			Zip:             "6040983",
+			Pref:            Name{"京都府", "ｷｮｳﾄﾌ"},
+			Region:          Name{"京都市中京区", "ｷｮｳﾄｼﾅｶｷﾞｮｳｸ"},
+			Town:            Name{"笹屋町竹屋町通御幸町西入", "ｻｻﾔﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "26104",
+			OldZip:          "604  ",
+			Zip:             "6040983",
+			Pref:            Name{"京都府", "ｷｮｳﾄﾌ"},
+			Region:          Name{"京都市中京区", "ｷｮｳﾄｼﾅｶｷﾞｮｳｸ"},
+			Town:            Name{"笹屋町夷川通麩屋町西入", "ｻｻﾔﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+		},
+		&Entry{
+			Code:            "26104",
+			OldZip:          "604  ",
+			Zip:             "6040983",
+			Pref:            Name{"京都府", "ｷｮｳﾄﾌ"},
+			Region:          Name{"京都市中京区", "ｷｮｳﾄｼﾅｶｷﾞｮｳｸ"},
+			Town:            Name{"笹屋町夷川通麩屋町東入", "ｻｻﾔﾁｮｳ"},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
 			IsBlockedScheme: false,
 			IsOverlappedZip: false,
 			Status:          StatusNotModified,
@@ -232,16 +334,16 @@ func parseTest(t *testing.T, actuals []string, expects []*Entry, newline string)
 				t.Errorf("Parse(): Town = %q; Expect %q", entry.Town, expect.Town)
 			}
 			if entry.IsPartialTown != expect.IsPartialTown {
-				t.Errorf("Parse(): IsPartialTown = %q; Expect %q", entry.IsPartialTown, expect.IsPartialTown)
+				t.Errorf("Parse(): IsPartialTown = %t; Expect %t", entry.IsPartialTown, expect.IsPartialTown)
 			}
 			if entry.IsLargeTown != expect.IsLargeTown {
-				t.Errorf("Parse(): IsLargeTown = %q; Expect %q", entry.IsLargeTown, expect.IsLargeTown)
+				t.Errorf("Parse(): IsLargeTown = %t; Expect %t", entry.IsLargeTown, expect.IsLargeTown)
 			}
 			if entry.IsBlockedScheme != expect.IsBlockedScheme {
-				t.Errorf("Parse(): IsBlockedScheme = %q; Expect %q", entry.IsBlockedScheme, expect.IsBlockedScheme)
+				t.Errorf("Parse(): IsBlockedScheme = %t; Expect %t", entry.IsBlockedScheme, expect.IsBlockedScheme)
 			}
 			if entry.IsOverlappedZip != expect.IsOverlappedZip {
-				t.Errorf("Parse(): IsOverlappedZip = %q; Expect %q", entry.IsOverlappedZip, expect.IsOverlappedZip)
+				t.Errorf("Parse(): IsOverlappedZip = %t; Expect %t", entry.IsOverlappedZip, expect.IsOverlappedZip)
 			}
 			if entry.Status != expect.Status {
 				t.Errorf("Parse(): Status = %q; Expect %q", entry.Status, expect.Status)
