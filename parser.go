@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type Parser interface {
+type entryParser interface {
 	// Parseは、cから値を受信したあと必要な加工を行い、c1へ送信する。
 	Parse(c <-chan interface{}, c1 chan<- interface{})
 }
@@ -30,7 +30,7 @@ func (f entryHandlerFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 
 var (
 	// 行連結が未解決のままとなった場合のエラー
-	IncompleteEntry = errors.New("incomplete entry")
+	incompleteEntry = errors.New("incomplete entry")
 )
 
 // entryが完結している場合はtrue、次のエントリと連結する場合はfalse
@@ -47,7 +47,7 @@ func (f entryCollectorFunc) Parse(c <-chan interface{}, c1 chan<- interface{}) {
 		for !f(entry) {
 			v, ok := <-c
 			if !ok {
-				c1 <- IncompleteEntry
+				c1 <- incompleteEntry
 				return
 			}
 			if err, ok := v.(error); ok {
@@ -213,7 +213,7 @@ func (rule Rule) Expand(token string) (tokens []string, err error) {
 	return
 }
 
-var parserFilters = []Parser{
+var parserFilters = []entryParser{
 	entryHandlerFunc(func(entry *Entry) *Entry {
 		if entry.Town.Text == "以下に掲載がない場合" {
 			entry.Notice = entry.Town.Text
@@ -291,10 +291,13 @@ var parserFilters = []Parser{
 	}),
 }
 
-// パースした結果を流すチャネルを返す。
-// ecからエラーを受信した後はどちらのチャネルからもデータは届かない。
-func Parse(c chan<- *Entry, ec chan<- error, r io.Reader) {
-	defer close(c)
+type Parser struct {
+	Error error
+}
+
+// Parseは郵便番号データを流すチャネルを返す。
+// エラーが途中で発生した場合、チャネルはclosedになりparser.Errorにエラーをセットする。
+func (parser *Parser) Parse(r io.Reader) <-chan *Entry {
 	c1 := make(chan interface{})
 	go readFromCSVLoop(r, c1)
 	for _, parser := range parserFilters {
@@ -302,13 +305,19 @@ func Parse(c chan<- *Entry, ec chan<- error, r io.Reader) {
 		go parser.Parse(c1, c2)
 		c1 = c2
 	}
-	for v := range c1 {
-		if err, ok := v.(error); ok {
-			ec <- err
-			return
+
+	c := make(chan *Entry)
+	go func() {
+		defer close(c)
+		for v := range c1 {
+			if err, ok := v.(error); ok {
+				parser.Error = err
+				return
+			}
+			c <- v.(*Entry)
 		}
-		c <- v.(*Entry)
-	}
+	}()
+	return c
 }
 
 // rからCSVデータを読み、cにエントリを送信する。

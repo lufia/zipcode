@@ -2,9 +2,33 @@ package postal
 
 import (
 	"bytes"
+	"fmt"
+	"log"
 	"strings"
 	"testing"
 )
+
+func ExampleParse() {
+	tab := []string{
+		`36207,"77703","7770301","ﾄｸｼﾏｹﾝ","ﾐﾏｼ","ｺﾔﾀﾞｲﾗ(ｲﾁﾊﾅ､ｲﾏﾏﾙ､ｵﾔﾏ､ｶｺﾞﾐ､ｶｼﾜﾗ､ｷﾅｶ､ｸﾜｶﾞﾗ､ｹﾔｷﾋﾗ､ｺﾋﾞｳﾗ､","徳島県","美馬市","木屋平（市初、今丸、尾山、カゴミ、樫原、木中、桑柄、ケヤキヒラ、小日浦、",1,0,0,0,0,0`,
+		`36207,"77703","7770301","ﾄｸｼﾏｹﾝ","ﾐﾏｼ","ｼﾞｼﾞﾝﾀﾞｷ､ｽｹﾞｿﾞｳ､ﾂｴﾀﾞﾆ､ﾂﾂﾞﾛｳ､ﾊｼﾞｺﾉ､ﾋﾞﾔｶﾞｲﾁ､ﾌﾀﾄﾞ､ﾐﾂｷﾞ､ﾐﾂｸﾞ､","徳島県","美馬市","地神滝、菅蔵、杖谷、葛尾、ハジコノ、ビヤガイチ、二戸、三ツ木、貢、",1,0,0,0,0,0`,
+		`36207,"77703","7770301","ﾄｸｼﾏｹﾝ","ﾐﾏｼ","ﾐﾅﾐﾊﾞﾘ､ﾑｺｳｶｼﾜﾗ)","徳島県","美馬市","南張、向樫原）",1,0,0,0,0,0`,
+	}
+	data := strings.Join(tab, "\r\n")
+	fin := bytes.NewBufferString(data)
+
+	var parser Parser
+	c := parser.Parse(fin)
+	var last *Entry
+	for entry := range c {
+		last = entry
+	}
+	if parser.Error != nil {
+		log.Fatal(parser.Error)
+	}
+	fmt.Println(last.Pref.Text + last.Region.Text + last.Town.Text)
+	// Output: 徳島県美馬市木屋平向樫原
+}
 
 func TestParse(t *testing.T) {
 	actuals := []string{
@@ -291,59 +315,58 @@ func TestPraseCircle(t *testing.T) {
 }
 
 func parseTest(t *testing.T, actuals []string, expects []*Entry, newline string) {
-	c := make(chan *Entry)
-	ec := make(chan error)
 	s := strings.Join(actuals, newline)
 	fin := bytes.NewBufferString(s)
-	go Parse(c, ec, fin)
+
+	var parser Parser
+	c := parser.Parse(fin)
 	for _, expect := range expects {
-		select {
-		case err := <-ec:
-			t.Errorf("Parse() = %v; Expect not error", err)
-		case entry := <-c:
-			if entry == nil {
-				t.Errorf("Parse() = nil; Expect %v", expect)
-				continue
-			}
-			if entry.Code != expect.Code {
-				t.Errorf("Parse(): Code = %q; Expect %q", entry.Code, expect.Code)
-			}
-			if entry.OldZip != expect.OldZip {
-				t.Errorf("Parse(): OldZip = %q; Expect %q", entry.OldZip, expect.OldZip)
-			}
-			if entry.Zip != expect.Zip {
-				t.Errorf("Parse(): Zip = %q; Expect %q", entry.Zip, expect.Zip)
-			}
-			if !entry.Pref.Equal(expect.Pref) {
-				t.Errorf("Parse(): Pref = %q; Expect %q", entry.Pref, expect.Pref)
-			}
-			if !entry.Region.Equal(expect.Region) {
-				t.Errorf("Parse(): Region = %q; Expect %q", entry.Region, expect.Region)
-			}
-			if !entry.Town.Equal(expect.Town) {
-				t.Errorf("Parse(): Town = %q; Expect %q", entry.Town, expect.Town)
-			}
-			if entry.IsPartialTown != expect.IsPartialTown {
-				t.Errorf("Parse(): IsPartialTown = %t; Expect %t", entry.IsPartialTown, expect.IsPartialTown)
-			}
-			if entry.IsLargeTown != expect.IsLargeTown {
-				t.Errorf("Parse(): IsLargeTown = %t; Expect %t", entry.IsLargeTown, expect.IsLargeTown)
-			}
-			if entry.IsBlockedScheme != expect.IsBlockedScheme {
-				t.Errorf("Parse(): IsBlockedScheme = %t; Expect %t", entry.IsBlockedScheme, expect.IsBlockedScheme)
-			}
-			if entry.IsOverlappedZip != expect.IsOverlappedZip {
-				t.Errorf("Parse(): IsOverlappedZip = %t; Expect %t", entry.IsOverlappedZip, expect.IsOverlappedZip)
-			}
-			if entry.Status != expect.Status {
-				t.Errorf("Parse(): Status = %q; Expect %q", entry.Status, expect.Status)
-			}
-			if entry.Reason != expect.Reason {
-				t.Errorf("Parse(): Reason = %q; Expect %q", entry.Reason, expect.Reason)
-			}
-			if entry.Notice != expect.Notice {
-				t.Errorf("Parse(): Notice = %q; Expect %q", entry.Notice, expect.Notice)
-			}
+		entry := <-c
+		if entry == nil {
+			t.Errorf("Parse() = nil; Expect %v", expect)
+			continue
 		}
+		if entry.Code != expect.Code {
+			t.Errorf("Parse(): Code = %q; Expect %q", entry.Code, expect.Code)
+		}
+		if entry.OldZip != expect.OldZip {
+			t.Errorf("Parse(): OldZip = %q; Expect %q", entry.OldZip, expect.OldZip)
+		}
+		if entry.Zip != expect.Zip {
+			t.Errorf("Parse(): Zip = %q; Expect %q", entry.Zip, expect.Zip)
+		}
+		if !entry.Pref.Equal(expect.Pref) {
+			t.Errorf("Parse(): Pref = %q; Expect %q", entry.Pref, expect.Pref)
+		}
+		if !entry.Region.Equal(expect.Region) {
+			t.Errorf("Parse(): Region = %q; Expect %q", entry.Region, expect.Region)
+		}
+		if !entry.Town.Equal(expect.Town) {
+			t.Errorf("Parse(): Town = %q; Expect %q", entry.Town, expect.Town)
+		}
+		if entry.IsPartialTown != expect.IsPartialTown {
+			t.Errorf("Parse(): IsPartialTown = %t; Expect %t", entry.IsPartialTown, expect.IsPartialTown)
+		}
+		if entry.IsLargeTown != expect.IsLargeTown {
+			t.Errorf("Parse(): IsLargeTown = %t; Expect %t", entry.IsLargeTown, expect.IsLargeTown)
+		}
+		if entry.IsBlockedScheme != expect.IsBlockedScheme {
+			t.Errorf("Parse(): IsBlockedScheme = %t; Expect %t", entry.IsBlockedScheme, expect.IsBlockedScheme)
+		}
+		if entry.IsOverlappedZip != expect.IsOverlappedZip {
+			t.Errorf("Parse(): IsOverlappedZip = %t; Expect %t", entry.IsOverlappedZip, expect.IsOverlappedZip)
+		}
+		if entry.Status != expect.Status {
+			t.Errorf("Parse(): Status = %q; Expect %q", entry.Status, expect.Status)
+		}
+		if entry.Reason != expect.Reason {
+			t.Errorf("Parse(): Reason = %q; Expect %q", entry.Reason, expect.Reason)
+		}
+		if entry.Notice != expect.Notice {
+			t.Errorf("Parse(): Notice = %q; Expect %q", entry.Notice, expect.Notice)
+		}
+	}
+	if parser.Error != nil {
+		t.Fatalf("Parse() = %v; Expect not error", parser.Error)
 	}
 }
