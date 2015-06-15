@@ -318,7 +318,7 @@ func TestParseOthers(t *testing.T) {
 	parseTest(t, actuals, expects, "\n")
 }
 
-func TestPraseNumberAfterCity(t *testing.T) {
+func TestPraseRegionWithNumber(t *testing.T) {
 	actuals := []string{
 		`38204,"796  ","7960088","ｴﾋﾒｹﾝ","ﾔﾜﾀﾊﾏｼ","ﾔﾜﾀﾊﾏｼﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ","愛媛県","八幡浜市","八幡浜市の次に番地がくる場合",0,0,0,0,0,0`,
 		`39386,"78121","7812110","ｺｳﾁｹﾝ","ｱｶﾞﾜｸﾞﾝｲﾉﾁｮｳ","ｲﾉﾁｮｳﾉﾂｷﾞﾆﾊﾞﾝﾁｶﾞｸﾙﾊﾞｱｲ","高知県","吾川郡いの町","いの町の次に番地がくる場合",0,0,0,0,0,0`,
@@ -369,6 +369,30 @@ func TestPraseNumberAfterCity(t *testing.T) {
 			Status:          StatusNotModified,
 			Reason:          ReasonNotModified,
 			Notice:          "大島町の次に番地がくる場合",
+		},
+	}
+	parseTest(t, actuals, expects, "\n")
+}
+
+func TestPraseCircle(t *testing.T) {
+	actuals := []string{
+		`13362,"10003","1000301","ﾄｳｷｮｳﾄ","ﾄｼﾏﾑﾗ","ﾄｼﾏﾑﾗｲﾁｴﾝ","東京都","利島村","利島村一円",0,0,0,0,0,0`,
+	}
+	expects := []*Entry{
+		&Entry{
+			Code:            "13362",
+			OldZip:          "10003",
+			Zip:             "1000301",
+			Pref:            Name{"東京都", "ﾄｳｷｮｳﾄ"},
+			Region:          Name{"利島村", "ﾄｼﾏﾑﾗ"},
+			Town:            Name{"", ""},
+			IsPartialTown:   false,
+			IsLargeTown:     false,
+			IsBlockedScheme: false,
+			IsOverlappedZip: false,
+			Status:          StatusNotModified,
+			Reason:          ReasonNotModified,
+			Notice:          "利島村一円",
 		},
 	}
 	parseTest(t, actuals, expects, "\n")
