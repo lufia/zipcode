@@ -165,7 +165,7 @@ func skip(s []rune, f func(c rune) bool) int {
 			return i
 		}
 	}
-	return 0
+	return len(s)
 }
 
 // Expand はRangeを展開して複数の文字列を返す。
