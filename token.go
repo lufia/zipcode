@@ -56,7 +56,7 @@ func (rule cmplxRule) Eval(s string) ([]string, error) {
 			}
 			return a, nil
 		case rule.TokenEnd:
-			return nil, fmt.Errorf("missing %q", rule.TokenBegin)
+			return nil, fmt.Errorf("%s: missing %q", s, rule.TokenBegin)
 		}
 	}
 	return []string{s}, nil
@@ -64,15 +64,19 @@ func (rule cmplxRule) Eval(s string) ([]string, error) {
 
 // Expr returns a index of the TokenEnd. If not, returns an error.
 func (rule cmplxRule) Expr(s []rune, off int) (int, error) {
+	depth := 1
 	for i := off; i < len(s); i++ {
 		switch s[i] {
 		case rule.TokenBegin:
-			return -1, fmt.Errorf("missing %q", rule.TokenEnd)
+			depth++
 		case rule.TokenEnd:
-			return i, nil
+			depth--
+			if depth == 0 {
+				return i, nil
+			}
 		}
 	}
-	return -1, fmt.Errorf("missing %q", rule.TokenEnd)
+	return -1, fmt.Errorf("%s: missing %q", string(s), rule.TokenEnd)
 }
 
 // Tokensはrule.Delimとrule.Rangeを評価して展開後の文字列配列を返す。
